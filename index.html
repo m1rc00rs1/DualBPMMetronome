@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Dual BPM Metronome</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 0; padding: 2rem; }
+    input { width: 80px; padding: 0.5rem; margin: 0.5rem; font-size: 1rem; }
+    button { padding: 0.7rem 1.5rem; font-size: 1rem; }
+    #output { margin-top: 1.5rem; font-size: 1.2rem; white-space: pre-wrap; }
+    #beatCircle {
+      width: 100px;
+      height: 100px;
+      background-color: #555;
+      margin: 2rem auto;
+      border-radius: 50%;
+      transition: background-color 0.1s, transform 0.1s;
+    }
+    .active {
+      background-color: red !important;
+      transform: scale(1.2);
+    }
+    #timeline {
+      width: 80%;
+      height: 30px;
+      margin: 2rem auto;
+      display: flex;
+      background: #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .beat {
+      flex-grow: 1;
+      background: #999;
+      transition: background-color 0.1s;
+    }
+    .beat.activeA {
+      background-color: red !important;
+    }
+    .beat.activeB {
+      background-color: blue !important;
+    }
+    .input-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .input-row label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dual BPM Metronome</h1>
+  <div class="input-row">
+    <label>Battute A: <input type="number" id="battuteA" value="4"></label>
+    <label>BPM A: <input type="number" id="bpmA" value="60"></label>
+  </div>
+  <div class="input-row">
+    <label>Battute B: <input type="number" id="battuteB" value="4"></label>
+    <label>BPM B: <input type="number" id="bpmB" value="60"></label>
+  </div>
+  <div class="input-row">
+    <label>T (s): <input type="number" id="tempoTotale"></label>
+    <button onclick="calcolaT()">Calcola T</button>
+  </div>
+  <div class="input-row">
+    <label>BPM A new: <input type="number" id="bpmAnew"></label>
+    <label>BPM B new: <input type="number" id="bpmBnew" readonly></label>
+    <button onclick="calcolaBPMBNew()">Calcola BPM B new</button>
+  </div>
+  <div class="input-row">
+    <button onclick="startMetronome()">Start</button>
+  </div>
+  <div id="beatCircle"></div>
+  <div id="timeline"></div>
+  <div id="output"></div>
+
+  <script>
+    let totalTimeSec = null;
+	let audioCtx = null;
+
+    function log(msg) {
+      const out = document.getElementById("output");
+      out.innerText += `\n${msg}`;
+      console.log(msg);
+    }
+
+    function calculateBPMB(bpmA, battuteA, battuteB) {
+      const tempoA = (battuteA * 60) / bpmA;
+      const tempoB = totalTimeSec - tempoA;
+      return (battuteB * 60) / tempoB;
+    }
+
+    function beep() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          log("AudioContext creato");
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().then(() => log("AudioContext resumed"));
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+        log("beep eseguito");
+      } catch (e) {
+        log("Errore beep: " + e.message);
+      }
+    }
+
+
+
+    async function flashBeat(type, index) {
+      const circle = document.getElementById("beatCircle");
+      const beatEl = document.getElementById(`beat-${index}`);
+      circle.classList.add("active");
+      beatEl.classList.add(type === 'A' ? "activeA" : "activeB");
+      await new Promise(r => setTimeout(r, 100));
+      circle.classList.remove("active");
+      beatEl.classList.remove("activeA");
+      beatEl.classList.remove("activeB");
+    }
+
+    function calcolaT() {
+      const bpmA = parseFloat(document.getElementById("bpmA").value);
+      const bpmB = parseFloat(document.getElementById("bpmB").value);
+      const battuteA = parseInt(document.getElementById("battuteA").value);
+      const battuteB = parseInt(document.getElementById("battuteB").value);
+      totalTimeSec = (battuteA * 60 / bpmA) + (battuteB * 60 / bpmB);
+      document.getElementById("tempoTotale").value = totalTimeSec.toFixed(2);
+	  log(`Tempo totale calcolato: ${totalTimeSec.toFixed(2)} s`);
+    }
+
+    function calcolaBPMBNew() {
+      const battuteA = parseInt(document.getElementById("battuteA").value);
+      const battuteB = parseInt(document.getElementById("battuteB").value);
+      const bpmAnew = parseFloat(document.getElementById("bpmAnew").value);
+      const T = parseFloat(document.getElementById("tempoTotale").value);
+      const tempoAnew = (battuteA * 60) / bpmAnew;
+      const tempoBnew = T - tempoAnew;
+      const bpmBnew = (battuteB * 60) / tempoBnew;
+      document.getElementById("bpmBnew").value = bpmBnew.toFixed(2);
+	  log(`Nuovo BPM B calcolato: ${bpmBnew.toFixed(2)}`);
+    }
+
+    async function startMetronome() {
+	  if (!audioCtx) {
+		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+		log("AudioContext inizializzato nello start");
+	  }
+	  if (audioCtx.state === "suspended") {
+		await audioCtx.resume();
+		log("AudioContext ripreso nello start");
+	  }
+	  
+      const bpmA = parseFloat(document.getElementById("bpmAnew").value);
+      const bpmB = parseFloat(document.getElementById("bpmBnew").value);
+      const battuteA = parseInt(document.getElementById("battuteA").value);
+      const battuteB = parseInt(document.getElementById("battuteB").value);
+	  const totalTimeSec = parseFloat(document.getElementById("tempoTotale").value);
+      log(`Avvio metronomo - BPM A: ${bpmA}, BPM B: ${bpmB.toFixed(2)}, T: ${totalTimeSec.toFixed(2)}s`);
+	  
+	  /*totalTimeSec = (battuteA * 60 / bpmA) + (battuteB * 60 / 60);
+      const bpmB = calculateBPMB(bpmA, battuteA, battuteB);
+
+      document.getElementById("bpmB").value = bpmB.toFixed(2);
+      document.getElementById("tempoTotale").value = totalTimeSec.toFixed(2);
+*/
+
+      document.getElementById("output").innerText = `BPM B calcolato: ${bpmB.toFixed(2)}, Tempo totale: ${totalTimeSec.toFixed(2)} s`;
+
+      const timeline = document.getElementById("timeline");
+      timeline.innerHTML = "";
+
+      for (let i = 0; i < battuteA + battuteB; i++) {
+        const beat = document.createElement("div");
+        beat.className = "beat";
+        beat.id = `beat-${i}`;
+        timeline.appendChild(beat);
+      }
+
+      const intervalA = 60000 / bpmA;
+      for (let i = 0; i < battuteA; i++) {
+        beep();
+        flashBeat("A", i);
+        await new Promise(r => setTimeout(r, intervalA));
+      }
+
+      const intervalB = 60000 / bpmB;
+      for (let i = 0; i < battuteB; i++) {
+        beep();
+        flashBeat("B", battuteA + i);
+        await new Promise(r => setTimeout(r, intervalB));
+      }
+    }
+  </script>
+</body>
+</html>
