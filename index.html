@@ -25,7 +25,7 @@
     }
     #timeline {
       width: 80%;
-      height: 30px;
+      height: 50px;
       margin: 2rem auto;
       display: flex;
       background: #ddd;
@@ -35,15 +35,19 @@
     .beat {
       flex-grow: 1;
       background: #999;
+	  border-right: 1px solid white;
       transition: background-color 0.1s;
     }
-    .beat.activeA {
-      background-color: red !important;
+    .beat:last-child {
+      border-right: none;
     }
-    .beat.activeB {
-      background-color: blue !important;
+    .beat.executedA {
+      background-color: darkred !important;
     }
-    .input-row {
+    .beat.executedB {
+      background-color: darkblue !important;
+    }    
+	.input-row {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
@@ -130,11 +134,12 @@
       const circle = document.getElementById("beatCircle");
       const beatEl = document.getElementById(`beat-${index}`);
       circle.classList.add("active");
-      beatEl.classList.add(type === 'A' ? "activeA" : "activeB");
+      /*beatEl.classList.add(type === 'A' ? "activeA" : "activeB");*/
+	  beatEl.classList.add(type === 'A' ? "executedA" : "executedB");
       await new Promise(r => setTimeout(r, 100));
       circle.classList.remove("active");
-      beatEl.classList.remove("activeA");
-      beatEl.classList.remove("activeB");
+      /*beatEl.classList.remove("activeA");
+      beatEl.classList.remove("activeB");*/
     }
 
     function calcolaT() {
@@ -198,14 +203,14 @@
       const intervalA = 60000 / bpmA;
       for (let i = 0; i < battuteA; i++) {
         beep();
-        flashBeat("A", i);
+        await flashBeat("A", i);
         await new Promise(r => setTimeout(r, intervalA));
       }
 
       const intervalB = 60000 / bpmB;
       for (let i = 0; i < battuteB; i++) {
         beep();
-        flashBeat("B", battuteA + i);
+        await flashBeat("B", battuteA + i);
         await new Promise(r => setTimeout(r, intervalB));
       }
     }
