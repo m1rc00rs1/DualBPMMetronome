@@ -64,11 +64,11 @@
 <body>
   <h1>Dual BPM Metronome</h1>
   <div class="input-row">
-    <label>Battute A: <input type="number" id="battuteA" value="4"></label>
+    <label>Pulsazioni A: <input type="number" id="PulsazioniA" value="4"></label>
     <label>BPM A: <input type="number" id="bpmA" value="60"></label>
   </div>
   <div class="input-row">
-    <label>Battute B: <input type="number" id="battuteB" value="4"></label>
+    <label>Pulsazioni B: <input type="number" id="PulsazioniB" value="4"></label>
     <label>BPM B: <input type="number" id="bpmB" value="60"></label>
   </div>
   <div class="input-row">
@@ -97,10 +97,10 @@
       console.log(msg);
     }
 
-    function calculateBPMB(bpmA, battuteA, battuteB) {
-      const tempoA = (battuteA * 60) / bpmA;
+    function calculateBPMB(bpmA, PulsazioniA, PulsazioniB) {
+      const tempoA = (PulsazioniA * 60) / bpmA;
       const tempoB = totalTimeSec - tempoA;
-      return (battuteB * 60) / tempoB;
+      return (PulsazioniB * 60) / tempoB;
     }
 
     function beep() {
@@ -145,23 +145,23 @@
     function calcolaT() {
       const bpmA = parseFloat(document.getElementById("bpmA").value);
       const bpmB = parseFloat(document.getElementById("bpmB").value);
-      const battuteA = parseInt(document.getElementById("battuteA").value);
-      const battuteB = parseInt(document.getElementById("battuteB").value);
-      totalTimeSec = (battuteA * 60 / bpmA) + (battuteB * 60 / bpmB);
-      document.getElementById("tempoTotale").value = totalTimeSec.toFixed(2);
-	  log(`Tempo totale calcolato: ${totalTimeSec.toFixed(2)} s`);
+      const PulsazioniA = parseInt(document.getElementById("PulsazioniA").value);
+      const PulsazioniB = parseInt(document.getElementById("PulsazioniB").value);
+      totalTimeSec = (PulsazioniA * 60 / bpmA) + (PulsazioniB * 60 / bpmB);
+      document.getElementById("tempoTotale").value = totalTimeSec.toFixed(4);
+	  log(`Tempo totale calcolato: ${totalTimeSec.toFixed(4)} s`);
     }
 
     function calcolaBPMBNew() {
-      const battuteA = parseInt(document.getElementById("battuteA").value);
-      const battuteB = parseInt(document.getElementById("battuteB").value);
+      const PulsazioniA = parseInt(document.getElementById("PulsazioniA").value);
+      const PulsazioniB = parseInt(document.getElementById("PulsazioniB").value);
       const bpmAnew = parseFloat(document.getElementById("bpmAnew").value);
       const T = parseFloat(document.getElementById("tempoTotale").value);
-      const tempoAnew = (battuteA * 60) / bpmAnew;
+      const tempoAnew = (PulsazioniA * 60) / bpmAnew;
       const tempoBnew = T - tempoAnew;
-      const bpmBnew = (battuteB * 60) / tempoBnew;
-      document.getElementById("bpmBnew").value = bpmBnew.toFixed(2);
-	  log(`Nuovo BPM B calcolato: ${bpmBnew.toFixed(2)}`);
+      const bpmBnew = (PulsazioniB * 60) / tempoBnew;
+      document.getElementById("bpmBnew").value = bpmBnew.toFixed(4);
+	  log(`Nuovo BPM B calcolato: ${bpmBnew.toFixed(4)}`);
     }
 
     async function startMetronome() {
@@ -176,24 +176,24 @@
 	  
       const bpmA = parseFloat(document.getElementById("bpmAnew").value);
       const bpmB = parseFloat(document.getElementById("bpmBnew").value);
-      const battuteA = parseInt(document.getElementById("battuteA").value);
-      const battuteB = parseInt(document.getElementById("battuteB").value);
+      const PulsazioniA = parseInt(document.getElementById("PulsazioniA").value);
+      const PulsazioniB = parseInt(document.getElementById("PulsazioniB").value);
 	  const totalTimeSec = parseFloat(document.getElementById("tempoTotale").value);
-      log(`Avvio metronomo - BPM A: ${bpmA}, BPM B: ${bpmB.toFixed(2)}, T: ${totalTimeSec.toFixed(2)}s`);
+      log(`Avvio metronomo - BPM A: ${bpmA}, BPM B: ${bpmB.toFixed(4)}, T: ${totalTimeSec.toFixed(4)}s`);
 	  
-	  /*totalTimeSec = (battuteA * 60 / bpmA) + (battuteB * 60 / 60);
-      const bpmB = calculateBPMB(bpmA, battuteA, battuteB);
+	  /*totalTimeSec = (PulsazioniA * 60 / bpmA) + (PulsazioniB * 60 / 60);
+      const bpmB = calculateBPMB(bpmA, PulsazioniA, PulsazioniB);
 
-      document.getElementById("bpmB").value = bpmB.toFixed(2);
-      document.getElementById("tempoTotale").value = totalTimeSec.toFixed(2);
+      document.getElementById("bpmB").value = bpmB.toFixed(4);
+      document.getElementById("tempoTotale").value = totalTimeSec.toFixed(4);
 */
 
-      document.getElementById("output").innerText = `BPM B calcolato: ${bpmB.toFixed(2)}, Tempo totale: ${totalTimeSec.toFixed(2)} s`;
+      document.getElementById("output").innerText = `BPM B calcolato: ${bpmB.toFixed(4)}, Tempo totale: ${totalTimeSec.toFixed(4)} s`;
 
       const timeline = document.getElementById("timeline");
       timeline.innerHTML = "";
 
-      for (let i = 0; i < battuteA + battuteB; i++) {
+      for (let i = 0; i < PulsazioniA + PulsazioniB; i++) {
         const beat = document.createElement("div");
         beat.className = "beat";
         beat.id = `beat-${i}`;
@@ -201,16 +201,16 @@
       }
 
       const intervalA = 60000 / bpmA;
-      for (let i = 0; i < battuteA; i++) {
+      for (let i = 0; i < PulsazioniA; i++) {
         beep();
         await flashBeat("A", i);
         await new Promise(r => setTimeout(r, intervalA));
       }
 
       const intervalB = 60000 / bpmB;
-      for (let i = 0; i < battuteB; i++) {
+      for (let i = 0; i < PulsazioniB; i++) {
         beep();
-        await flashBeat("B", battuteA + i);
+        await flashBeat("B", PulsazioniA + i);
         await new Promise(r => setTimeout(r, intervalB));
       }
     }
